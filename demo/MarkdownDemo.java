@@ -50,10 +50,10 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	boolean started;
 	Form form;
 	
-	Hashtable urls = new Hashtable();
-	Hashtable itemsLinks = new Hashtable();
+	Hashtable urls = new Hashtable(); // link->url table
+	Hashtable itemsLinks = new Hashtable(); // item->link table
 	Stack links = new Stack();
-	Vector loadImages = new Vector();
+	Vector loadImages = new Vector(); // image loading queue
 
 	protected void destroyApp(boolean unconditional) {
 	}
@@ -71,13 +71,26 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 		
 		Display.getDisplay(this).setCurrent(this.form = form);
 		
+		// start parsing thread
 		new Thread(this).start();
+	}
+	
+	public void run() {
+		// cleanup
+		urls.clear();
+		itemsLinks.clear();
+		links.removeAllElements();
+		
+		// run parser
+		String text = "# Markdown parser demo\n\n*Some* <sub>example</sub> **text**\n[Some link](http://nnproject.cc)\\\nhttps://nnproject.cc";
+		Markdown.parse(this, form, text, urls);
 	}
 	
 	// region Command listener
 
 	public void commandAction(Command c, Item item) {
 		if (c == itemLinkCmd) {
+			// process link
 			Object link = itemsLinks.get(item);
 			if (link != null) {
 				String url;
@@ -86,6 +99,8 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 				} else {
 					url = (String) urls.get(link);
 				}
+				
+				// open url in browser
 				try {
 					if (platformRequest(url)) {
 						notifyDestroyed();
@@ -102,16 +117,6 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	}
 	
 	// endregion Command listener
-	
-	public void run() {
-		// cleanup
-		urls.clear();
-		itemsLinks.clear();
-		links.removeAllElements();
-		
-		String text = "# Markdown parser demo\n\n*Some* <sub>example</sub> **text**\n[Some link](http://nnproject.cc)\\\nhttps://nnproject.cc";
-		Markdown.parse(this, form, text, urls);
-	}
 	
 	// region Markdown listener
 
@@ -132,6 +137,7 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 			}
 		}
 		
+		// parsing finished, remove ticker
 		form.setTicker(null);
 	}
 
@@ -196,7 +202,7 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	}
 
 	public void lineBreak(Object ctx) {
-		Spacer spacer = new Spacer(1, 10);
+		Spacer spacer = new Spacer(1, 1);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 		form.append(spacer);
 	}
@@ -209,6 +215,7 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	
 	// endregion Markdown listener
 	
+	// utility for creating MIDP font
 	static final Font getFont(int font) {
 		return Font.getFont(font & (Markdown.FONT_FACE_SYSTEM | Markdown.FONT_FACE_MONOSPACE),
 				font & (Markdown.FONT_STYLE_PLAIN | Markdown.FONT_STYLE_BOLD | Markdown.FONT_STYLE_ITALIC | Markdown.FONT_STYLE_UNDERLINED),
