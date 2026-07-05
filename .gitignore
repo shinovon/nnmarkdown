@@ -1,0 +1,19 @@
+*.class
+*.jar
+*.zip
+
+# eclipse
+/.settings/
+/bin/
+
+# mtj
+/.mtj.tmp/
+/.processed/
+/mtj-build/
+/deployed/**
+*.tmp
+
+.mtj
+build.properties
+.classpath
+.project
