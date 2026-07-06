@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Hashtable;
 import java.util.Stack;
 import java.util.Vector;
@@ -81,8 +83,15 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 		itemsLinks.clear();
 		links.removeAllElements();
 		
-		// run parser
-		String text = "# Markdown parser demo\n\n*Some* <sub>example</sub> **text**\n[Some link](http://nnproject.cc)\\\nhttps://nnproject.cc";
+		String text;
+		try {
+			text = readUtf("".getClass().getResourceAsStream("/a"), 0);
+		} catch (Exception e) {
+			text = e.toString();
+		}
+		
+		Markdown.enableBlockquotes = false;
+		Markdown.breakOnNewLine = true;
 		Markdown.parse(this, form, text, urls);
 	}
 	
@@ -128,6 +137,8 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 		// process image loading queue
 		while (!loadImages.isEmpty()) {
 			Object[] o = (Object[]) loadImages.elementAt(0);
+			loadImages.removeElementAt(0);
+			
 			ImageItem item = (ImageItem) o[0];
 			String url = (String) urls.get(o[1]);
 			try {
@@ -153,6 +164,12 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	}
 
 	public void endCodeBlock(Object ctx) {
+	}
+
+	public void beginBlockQuote(Object ctx) {
+	}
+
+	public void endBlockQuote(Object ctx) {
 	}
 
 	public void append(Object ctx, String text, int font) {
@@ -208,9 +225,7 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	}
 
 	public void lineBreak(Object ctx) {
-		Spacer spacer = new Spacer(1, 1);
-		spacer.setLayout(Item.LAYOUT_NEWLINE_AFTER);
-		form.append(spacer);
+		form.append("\n");
 	}
 
 	public void lineBreak2(Object ctx) {
@@ -218,15 +233,37 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
 		form.append(spacer);
 	}
+
+	public void horizontalLine(Object ctx) {
+		Spacer spacer = new Spacer(10, 10);
+		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
+		form.append(spacer);
+	}
 	
 	// endregion Markdown listener
 	
+	// region Utilities
+	
 	// utility for creating MIDP font
 	static final Font getFont(int font) {
-		return Font.getFont(font & (Markdown.FONT_FACE_SYSTEM | Markdown.FONT_FACE_MONOSPACE),
-				font & (Markdown.FONT_STYLE_PLAIN | Markdown.FONT_STYLE_BOLD | Markdown.FONT_STYLE_ITALIC | Markdown.FONT_STYLE_UNDERLINED),
-				font & (Markdown.FONT_SIZE_SMALL | Markdown.FONT_SIZE_MEDIUM | Markdown.FONT_SIZE_LARGE)
+		return Font.getFont(font & (Markdown.MIDP_FONT_FACE_MASK),
+				font & (Markdown.MIDP_FONT_STYLE_MASK),
+				font & (Markdown.MIDP_FONT_SIZE_MASK)
 				);
 	}
+
+	private static String readUtf(InputStream in, int i) throws IOException {
+		byte[] buf = new byte[i <= 0 ? 1024 : i];
+		i = 0;
+		int j;
+		while ((j = in.read(buf, i, buf.length - i)) != -1) {
+			if ((i += j) >= buf.length) {
+				System.arraycopy(buf, 0, buf = new byte[i + 2048], 0, i);
+			}
+		}
+		return new String(buf, 0, i, "UTF-8");
+	}
+	
+	// endregion
 
 }

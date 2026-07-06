@@ -27,7 +27,7 @@ import java.util.Stack;
 /**
  * Markdown parser library
  * @author Shinovon
- * @version 0.1
+ * @version 0.2
  */
 public class Markdown {
 	public static final int FONT_SIZE_SMALL = 1 << 3;
@@ -64,7 +64,7 @@ public class Markdown {
 			MD_SPACES = 4,
 			MD_LAST_TAB = 5,
 			MD_ESCAPE = 6,
-			MD_QUOTE = 7,
+			MD_GT = 7,
 			MD_HEADER = 8,
 			MD_LENGTH = 9,
 			MD_ITALIC = 10,
@@ -88,7 +88,10 @@ public class Markdown {
 			MD_PARENTHESIS = 28,
 			MD_PARAGRAPH = 29,
 			MD_BREAKS = 30,
-			MD_HTML_STRIKE = 31;
+			MD_HTML_STRIKE = 31,
+			MD_BLOCKQUOTE = 32,
+			MD_LAST_GT = 33,
+			MD_COUNT = 34;
 	
 	/**
 	 * Enables {@link #FONT_STYLE_STRIKETHROUGH} font style
@@ -106,6 +109,11 @@ public class Markdown {
 	 * Enables highlighting of words starting with #
 	 */
 	public static boolean enableTagLinks = false;
+	/**
+	 * Enables blockquotes
+	 */
+	public static boolean enableBlockquotes = true;
+	public static boolean breakOnNewLine = true;
 	
 	public static void parse(MarkdownListener ui, Object ctx, String body, Hashtable urls) {
 		if (body == null) {
@@ -118,7 +126,7 @@ public class Markdown {
 		int len = body.length();
 		if (len == 0) return;
 		int o = 0;
-		int[] state = new int[32];
+		int[] state = new int[MD_COUNT];
 		state[MD_FONT_SIZE] = FONT_SIZE_SMALL;
 		Stack linksStack = new Stack();
 		
@@ -141,7 +149,8 @@ public class Markdown {
 							if (c == '\r' || (c == '\n' && l != '\r')) {
 								l = c;
 								boolean b;
-								if ((b = state[MD_HEADER] != 0) || state[MD_LENGTH] != 0 || state[MD_ESCAPE] == 1) {
+								boolean escape = state[MD_ESCAPE] == 1;
+								if ((b = state[MD_HEADER] != 0) || state[MD_LENGTH] != 0 || escape) {
 									if (b) {
 										sb.append('\n');
 										flush(ctx, ui, sb, state);
@@ -155,7 +164,6 @@ public class Markdown {
 									state[MD_HEADER] = 0;
 									state[MD_ESCAPE] = 0;
 									state[MD_LENGTH] = 0;
-									state[MD_QUOTE] = 0;
 									state[MD_SPACES] = 0;
 									state[MD_TAB] = 0;
 									state[MD_GRAVE] = 0;
@@ -168,14 +176,24 @@ public class Markdown {
 									state[MD_BREAKS] ++;
 	
 									if (!b) {
-										sb.append('\n');
+										sb.append(escape || breakOnNewLine ? '\n' : ' ');
 										state[MD_PARAGRAPH] = 0;
 									}
 								} else if (state[MD_LENGTH] == 0 && state[MD_PARAGRAPH] == 0) {
 									flush(ctx, ui, sb, state);
+									int j = state[MD_LAST_GT] - state[MD_GT];
+									while (state[MD_BLOCKQUOTE] != 0 && j != 0) {
+										ui.endBlockQuote(ctx);
+										state[MD_BLOCKQUOTE] --;
+										j --;
+									}
+									
 									ui.lineBreak(ctx);
 									state[MD_PARAGRAPH] = 1;
 								}
+
+								state[MD_LAST_GT] = state[MD_GT];
+								state[MD_GT] = 0;
 								continue;
 							} else if (c <= ' ' && l <= ' ') {
 								if ((l == c) && (state[MD_SPACES]++ == 0 || state[MD_SPACES] == 2 + 1)) {
@@ -244,6 +262,12 @@ public class Markdown {
 											sb.append("  ");
 										}
 									}
+									if (state[MD_GT] != 0 && state[MD_LENGTH] == 0 && c != '>' && state[MD_GT] > state[MD_BLOCKQUOTE]) {
+										flush(ctx, ui, sb, state);
+										state[MD_BLOCKQUOTE] ++;
+										ui.lineBreak(ctx);
+										ui.beginBlockQuote(ctx);
+									}
 	
 									switch (c) {
 									case '\t':
@@ -267,10 +291,13 @@ public class Markdown {
 										}
 										break;
 									case '>':
-										if (state[MD_LENGTH] == 0 && state[MD_QUOTE] == 0) {
-											state[MD_QUOTE] ++;
+										if (state[MD_LENGTH] == 0) {
+											if (!enableBlockquotes) {
+												sb.append(c);
+											} else {
+												state[MD_GT] ++;
+											}
 											l = c;
-											sb.append(c);
 											continue;
 										}
 										break;
@@ -282,17 +309,17 @@ public class Markdown {
 										}
 										break;
 									case '-': {
-										if (state[MD_LENGTH] == 0 && i + 2 < len
-												&& chars[i + 1] == c && chars[i + 2] == c) {
-											int k = i;
-											//noinspection StatementWithEmptyBody
-											while (++k < len && chars[k] != '\n' && chars[k] != '\r');
-											if (chars[k - 1] == c) {
-												i = k - 1;
-												state[MD_LINE] ++;
-												sb.append("\n");
-												flush(ctx, ui, sb, state);
-												continue;
+										if (state[MD_LENGTH] == 0) {
+											if (i + 2 < len && chars[i + 1] == c && chars[i + 2] == c) {
+												int k = i;
+												//noinspection StatementWithEmptyBody
+												while (++k < len && chars[k] != '\n' && chars[k] != '\r');
+												if (chars[k - 1] == c) {
+													i = k - 1;
+													state[MD_LINE] ++;
+													flush(ctx, ui, sb, state);
+													continue;
+												}
 											}
 										}
 										break;
@@ -308,7 +335,6 @@ public class Markdown {
 											if (chars[k - 1] == c) {
 												i = k - 1;
 												state[MD_LINE] ++;
-												sb.append("\n");
 												flush(ctx, ui, sb, state);
 												continue;
 											}
@@ -460,7 +486,6 @@ public class Markdown {
 											}
 										}
 										if (state[MD_GRAVE] != 0) {
-											System.out.println("end " + state[MD_GRAVE] + " " + i + " " + len);
 											while (i < len) {
 												if ((c = chars[i++]) == '`') {
 													if (state[MD_GRAVE] == 1) {
@@ -757,6 +782,19 @@ public class Markdown {
 				}
 			}
 		} finally {
+			while (!linksStack.empty()) {
+				linksStack.pop();
+				ui.endHref(ctx);
+			}
+			
+			if (state[MD_GRAVE] == 3) {
+				ui.endCodeBlock(ctx);
+			}
+			
+			while (state[MD_BLOCKQUOTE] != 0) {
+				state[MD_BLOCKQUOTE] --;
+				ui.endBlockQuote(ctx);
+			}
 			ui.endMarkdown(ctx);
 		}
 	}
@@ -858,7 +896,7 @@ public class Markdown {
 		sb.setLength(0);
 		
 		if (state[MD_HEADER] != 0 || state[MD_LINE] != 0) {
-			form.lineBreak(ctx);
+			form.horizontalLine(ctx);
 			state[MD_LINE] = 0;
 			state[MD_PARAGRAPH] = 1;
 		} else while (space-- != 0) {
@@ -870,7 +908,7 @@ public class Markdown {
 		int face = 0, style = 0, size = 0;
 		if (state[MD_GRAVE] != 0) {
 			face = FONT_FACE_MONOSPACE;
-			style = FONT_STYLE_BOLD;
+//			style = FONT_STYLE_BOLD;
 		} else {
 			face = state[MD_FONT_FACE];
 			style = state[MD_FONT_STYLE];
