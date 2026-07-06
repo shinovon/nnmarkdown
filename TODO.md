@@ -1,5 +1,5 @@
-- [ ] horizontal line
-- [ ] code
+- [x] horizontal line
+- [x] code block
+- [x] blockquotes
 - [ ] lists
-- [ ] blockquotes
 - [ ] tables

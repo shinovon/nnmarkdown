@@ -110,7 +110,7 @@ public class Markdown {
 	 */
 	public static boolean enableTagLinks = false;
 	/**
-	 * Enables blockquotes
+	 * Enables parsing of blockquotes
 	 */
 	public static boolean enableBlockquotes = true;
 	public static boolean breakOnNewLine = true; // TODO set default value to false when lists are implemented
