@@ -60,6 +60,15 @@ public interface MarkdownListener {
 	 * @param ctx Context passed by application
 	 */
 	void endBlockQuote(Object ctx);
+	
+	/**
+	 * @param ctx Context passed by application
+	 */
+	void beginHeader(Object ctx, int n);
+	/**
+	 * @param ctx Context passed by application
+	 */
+	void endHeader(Object ctx, int n);
 
 	/**
 	 * @param ctx Context passed by application
@@ -92,11 +101,6 @@ public interface MarkdownListener {
 	 * @param ctx Context passed by application
 	 */
 	void lineBreak(Object ctx);
-	
-	/**
-	 * @param ctx Context passed by application
-	 */
-	void header(Object ctx);
 
 	/**
 	 * @param ctx Context passed by application

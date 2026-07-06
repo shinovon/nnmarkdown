@@ -812,7 +812,7 @@ public class Markdown {
 		if (sb.length() == 0) return;
 
 		if (state[MD_HEADER] != 0) {
-			form.header(ctx);
+			form.beginHeader(ctx, state[MD_HEADER]);
 		}
 		int space = 0;
 		while (sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ') {
@@ -904,7 +904,9 @@ public class Markdown {
 		}
 		sb.setLength(0);
 		
-		if (state[MD_HEADER] != 0 || state[MD_LINE] != 0) {
+		if (state[MD_HEADER] != 0) {
+			form.endHeader(ctx, state[MD_HEADER]);
+		} else if ( state[MD_LINE] != 0) {
 			form.horizontalLine(ctx);
 			state[MD_LINE] = 0;
 			state[MD_PARAGRAPH] = 1;

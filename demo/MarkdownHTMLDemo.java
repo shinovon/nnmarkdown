@@ -168,8 +168,13 @@ public class MarkdownHTMLDemo implements MarkdownListener {
 		result.append("<br>");
 	}
 
-	public void header(Object ctx) {
+	public void beginHeader(Object ctx, int n) {
 		// TODO
+	}
+
+	public void endHeader(Object ctx, int n) {
+		// TODO
+		if (n <= 3) result.append("<hr>");
 	}
 
 	public void horizontalLine(Object ctx) {

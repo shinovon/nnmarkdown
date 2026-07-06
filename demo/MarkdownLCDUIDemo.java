@@ -219,8 +219,15 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		form.append("\n");
 	}
 
-	public void header(Object ctx) {
+	public void beginHeader(Object ctx, int n) {
 		Spacer spacer = new Spacer(1, 4);
+		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
+		form.append(spacer);
+	}
+
+	public void endHeader(Object ctx, int n) {
+		if (n > 3) return;
+		Spacer spacer = new Spacer(10, 10);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
 		form.append(spacer);
 	}
