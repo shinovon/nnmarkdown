@@ -84,6 +84,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		itemsLinks.clear();
 		links.removeAllElements();
 		
+		// load source text
 		String text;
 		try {
 			text = readUtf("".getClass().getResourceAsStream("/a"), 0);
@@ -91,8 +92,11 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 			text = e.toString();
 		}
 		
+		// parsing options
 		Markdown.enableBlockquotes = false;
+		Markdown.monospaceIsBold = true;
 		Markdown.breakOnNewLine = true;
+		
 		Markdown.parse(this, form, text, urls);
 	}
 	
@@ -233,6 +237,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	}
 
 	public void horizontalLine(Object ctx) {
+		// can't render lines on lcdui form, add spacer instead
 		Spacer spacer = new Spacer(10, 10);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
 		form.append(spacer);

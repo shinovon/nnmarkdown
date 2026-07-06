@@ -113,17 +113,28 @@ public class Markdown {
 	 * Enables parsing of blockquotes
 	 */
 	public static boolean enableBlockquotes = true;
+	/**
+	 * Make monospace text have bold style
+	 */
+	public static boolean monospaceIsBold = false;
 	public static boolean breakOnNewLine = true; // TODO set default value to false when lists are implemented
 	
-	public static void parse(MarkdownListener ui, Object ctx, String body, Hashtable urls) {
-		if (body == null) {
+	/**
+	 * 
+	 * @param ui Parsed Markdown handler
+	 * @param ctx Context passed to handler 
+	 * @param src Source text
+	 * @param urls URLs table for output, can be null
+	 */
+	public static void parse(MarkdownListener ui, Object ctx, String src, Hashtable urls) {
+		if (src == null) {
 			ui.beginMarkdown(ctx);
 			ui.endMarkdown(ctx);
 			return;
 		}
 		StringBuffer sb = new StringBuffer();
-		int d = body.indexOf('<');
-		int len = body.length();
+		int d = src.indexOf('<');
+		int len = src.length();
 		if (len == 0) {
 			ui.beginMarkdown(ctx);
 			ui.endMarkdown(ctx);
@@ -136,7 +147,7 @@ public class Markdown {
 		
 		ui.beginMarkdown(ctx);
 		try {
-			char[] chars = body.toCharArray();
+			char[] chars = src.toCharArray();
 			char l = 0;
 			while (d != -1 || o < len) {
 				a: {
@@ -352,7 +363,7 @@ public class Markdown {
 										
 										if (state[t] == 0) {
 											if (i + 2 >= k) break;
-											int j = body.indexOf(c, i + 1);
+											int j = src.indexOf(c, i + 1);
 											if (j == -1 || j >= k) break;
 										}
 										
@@ -369,7 +380,7 @@ public class Markdown {
 													i += 2;
 													continue;
 												} else if (state[t] == 0) {
-													int j = body.indexOf(s, i + 1);
+													int j = src.indexOf(s, i + 1);
 													if (i + 6 >= k || j == -1 || j >= k || chars[i + 3] <= ' '
 															|| (j + 3 != k && chars[j + 3] > ' ')) {
 														sb.append(s);
@@ -395,7 +406,7 @@ public class Markdown {
 												i++;
 												continue;
 											} else if (state[t] == 0) {
-												int j = body.indexOf(s, i + 1);
+												int j = src.indexOf(s, i + 1);
 												if (i + 4 >= k || j == -1 || j >= k
 														|| chars[i + 2] <= ' ' || chars[j - 1] <= ' '
 														|| (c == '_' && j + 2 != k && chars[j + 2] > ' ')) {
@@ -422,7 +433,7 @@ public class Markdown {
 										}
 										
 										if (state[t] == 0) {
-											int j = body.indexOf(c, i + 1);
+											int j = src.indexOf(c, i + 1);
 											if (j == -1 || j >= k || chars[i] <= ' '
 													|| (c == '_' && j + 1 != k && chars[j + 1] > ' ')) {
 												break;
@@ -444,7 +455,7 @@ public class Markdown {
 										while (++k < len && chars[k] != '\n' && chars[k] != '\r');
 										if (state[MD_STRIKE] == 0) {
 											if (i + 4 >= k) break;
-											int j = body.indexOf("~~", i + 1);
+											int j = src.indexOf("~~", i + 1);
 											if (j == -1 || j >= k || chars[i + 2] <= ' ' || chars[j - 1] <= ' ') {
 												break;
 											}
@@ -465,20 +476,20 @@ public class Markdown {
 									}
 									case '`': {
 										if (i + 2 < len && chars[i + 1] == c && chars[i + 2] == c) {
-											int j = body.indexOf('\n', i + 1);
-											int k = body.indexOf('`', i + 3);
+											int j = src.indexOf('\n', i + 1);
+											int k = src.indexOf('`', i + 3);
 											flush(ctx, ui, sb, state);
 											i += state[MD_GRAVE] = 3;
 
 											String lang = null;
 											if (j != -1 && j < k) {
-												lang = body.substring(i, j);
+												lang = src.substring(i, j);
 												i = j + 1;
 											}
 
 											ui.beginCodeBlock(ctx, lang);
 										} else {
-											int j = body.indexOf('`', i + 1);
+											int j = src.indexOf('`', i + 1);
 											if (j == -1) break;
 											if (i + 1 < len && chars[i + 1] == c) {
 												flush(ctx, ui, sb, state);
@@ -519,7 +530,7 @@ public class Markdown {
 											if (state[MD_GRAVE] == 3) {
 												ui.endCodeBlock(ctx);
 											}
-											d = body.indexOf('<', o = i);
+											d = src.indexOf('<', o = i);
 											state[MD_LENGTH] ++;
 											state[MD_GRAVE] = 0;
 											l = '`';
@@ -544,10 +555,10 @@ public class Markdown {
 										while (++k < len && chars[k] != '\n' && chars[k] != '\r');
 										
 										int n, m;
-										if ((n = body.indexOf(']', i)) == -1 || n >= k
-												|| (m = body.indexOf('(', n)) == -1
+										if ((n = src.indexOf(']', i)) == -1 || n >= k
+												|| (m = src.indexOf('(', n)) == -1
 												|| m != n + 1 || m >= k
-												|| (m = body.indexOf(')', m)) == -1 || m >= k) {
+												|| (m = src.indexOf(')', m)) == -1 || m >= k) {
 											break;
 										}
 										
@@ -661,7 +672,7 @@ public class Markdown {
 						}
 						if (d == len) break;
 					}
-					int e = body.indexOf('>', d);
+					int e = src.indexOf('>', d);
 					if (d + 2 < len) { // format by tags
 						if (chars[d + 1] == '/') {
 							if ((chars[d + 2] == 'b' && chars[d + 3] == '>')
@@ -737,7 +748,7 @@ public class Markdown {
 								
 								flush(ctx, ui, sb, state);
 								
-								String url = body.substring(d + 4, e);
+								String url = src.substring(d + 4, e);
 								int i;
 								if ((i = url.indexOf("src=")) != -1) {
 									url = url.substring(i + 4);
@@ -763,7 +774,7 @@ public class Markdown {
 								flush(ctx, ui, sb, state);
 								state[MD_HTML_LINK] ++;
 								
-								String url = body.substring(d + 2, e);
+								String url = src.substring(d + 2, e);
 								int i;
 								if ((i = url.indexOf("href=")) != -1) {
 									url = url.substring(i + 5);
@@ -787,7 +798,7 @@ public class Markdown {
 							// <li> ?
 						}
 					}
-					d = body.indexOf('<', o = e + 1);
+					d = src.indexOf('<', o = e + 1);
 				}
 			}
 		} finally {
@@ -919,7 +930,7 @@ public class Markdown {
 		int face = 0, style = 0, size = 0;
 		if (state[MD_GRAVE] != 0) {
 			face = FONT_FACE_MONOSPACE;
-//			style = FONT_STYLE_BOLD;
+			if (monospaceIsBold) style = FONT_STYLE_BOLD;
 		} else {
 			face = state[MD_FONT_FACE];
 			style = state[MD_FONT_STYLE];
