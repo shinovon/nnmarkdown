@@ -21,7 +21,6 @@ SOFTWARE.
 */
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Hashtable;
 import java.util.Stack;
 import java.util.Vector;
@@ -44,7 +43,7 @@ import javax.microedition.midlet.MIDlet;
 import cc.nnproject.markdown.Markdown;
 import cc.nnproject.markdown.MarkdownListener;
 
-public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandListener, ItemCommandListener, Runnable {
+public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, CommandListener, ItemCommandListener, Runnable {
 	
 	static final Command exitCmd = new Command("Exit", Command.EXIT, 0);
 	static final Command itemLinkCmd = new Command("Link", Command.ITEM, 1);
