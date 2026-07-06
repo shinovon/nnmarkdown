@@ -23,23 +23,70 @@ package cc.nnproject.markdown;
 
 public interface MarkdownListener {
 	
+	/**
+	 * @param ctx Context passed by application
+	 */
 	void beginMarkdown(Object ctx);
+	/**
+	 * @param ctx Context passed by application
+	 */
 	void endMarkdown(Object ctx);
 	
+	/**
+	 * @param ctx Context passed by application
+	 * @param link
+	 */
 	void beginHref(Object ctx, Object link);
+	/**
+	 * @param ctx Context passed by application
+	 */
 	void endHref(Object ctx);
+	
+	/**
+	 * @param ctx Context passed by application
+	 * @param language Code language, may be null
+	 */
+	void beginCodeBlock(Object ctx, String language);
+	/**
+	 * @param ctx Context passed by application
+	 */
+	void endCodeBlock(Object ctx);
 
+	/**
+	 * @param ctx Context passed by application
+	 * @param text Text
+	 * @param font bitwise combination of font styles
+	 */
 	void append(Object ctx, String text, int font);
 
-	// text is url
+	/**
+	 * @param ctx Context passed by application
+	 * @param text Text
+	 * @param font bitwise combination of font styles
+	 */
 	void appendLink(Object ctx, String text, int font);
 
+	/**
+	 * @param ctx Context passed by application
+	 * @param font bitwise combination of font styles
+	 */
 	void appendInlineSpace(Object ctx, int font);
 	
+	/**
+	 * @param ctx Context passed by application
+	 * @param srcLink Link to the source of image
+	 * @param alt Image caption, may be null
+	 */
 	void appendImage(Object ctx, Object srcLink, String alt);
 
+	/**
+	 * @param ctx Context passed by application
+	 */
 	void lineBreak(Object ctx);
 	
+	/**
+	 * @param ctx Context passed by application
+	 */
 	void lineBreak2(Object ctx);
 
 }

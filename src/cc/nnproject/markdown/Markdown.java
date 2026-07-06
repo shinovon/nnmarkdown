@@ -24,6 +24,11 @@ package cc.nnproject.markdown;
 import java.util.Hashtable;
 import java.util.Stack;
 
+/**
+ * Markdown parser library
+ * @author Shinovon
+ * @version 0.1
+ */
 public class Markdown {
 	public static final int FONT_SIZE_SMALL = 1 << 3;
 	public static final int FONT_SIZE_MEDIUM = 0;
@@ -37,6 +42,19 @@ public class Markdown {
 
 	public static final int FONT_FACE_SYSTEM = 0;
 	public static final int FONT_FACE_MONOSPACE = 1 << 5;
+	
+	/**
+	 * Mask for passing font to MIDP Font.getFont() as first parameter
+	 */
+	public static final int MIDP_FONT_FACE_MASK = FONT_FACE_SYSTEM | FONT_FACE_MONOSPACE;
+	/**
+	 * Mask for passing font to MIDP Font.getFont() as second parameter
+	 */
+	public static final int MIDP_FONT_STYLE_MASK = FONT_STYLE_PLAIN | FONT_STYLE_BOLD | FONT_STYLE_ITALIC | FONT_STYLE_UNDERLINED;
+	/**
+	 * Mask for passing font to MIDP Font.getFont() as third parameter
+	 */
+	public static final int MIDP_FONT_SIZE_MASK = FONT_SIZE_SMALL | FONT_SIZE_MEDIUM | FONT_SIZE_LARGE;
 	
 	private static final int
 			MD_FONT_FACE = 0,
@@ -72,15 +90,27 @@ public class Markdown {
 			MD_BREAKS = 30,
 			MD_HTML_STRIKE = 31;
 	
+	/**
+	 * Enables {@link #FONT_STYLE_STRIKETHROUGH} font style
+	 */
 	public static boolean enableStrikethroughFont = false;
+	/**
+	 * Enables highlighting of URLs
+	 */
 	public static boolean enableLinksSearching = true;
+	/**
+	 * Enables highlighting of words starting with @
+	 */
 	public static boolean enableHashtagLinks = false;
+	/**
+	 * Enables highlighting of words starting with #
+	 */
 	public static boolean enableTagLinks = false;
 	
-	public static void parse(MarkdownListener form, Object ctx, String body, Hashtable urls) {
+	public static void parse(MarkdownListener ui, Object ctx, String body, Hashtable urls) {
 		if (body == null) {
-			form.beginMarkdown(ctx);
-			form.endMarkdown(ctx);
+			ui.beginMarkdown(ctx);
+			ui.endMarkdown(ctx);
 			return;
 		}
 		StringBuffer sb = new StringBuffer();
@@ -92,7 +122,7 @@ public class Markdown {
 		state[MD_FONT_SIZE] = FONT_SIZE_SMALL;
 		Stack linksStack = new Stack();
 		
-		form.beginMarkdown(ctx);
+		ui.beginMarkdown(ctx);
 		try {
 			char[] chars = body.toCharArray();
 			char l = 0;
@@ -114,7 +144,7 @@ public class Markdown {
 								if ((b = state[MD_HEADER] != 0) || state[MD_LENGTH] != 0 || state[MD_ESCAPE] == 1) {
 									if (b) {
 										sb.append('\n');
-										flush(ctx, form, sb, state);
+										flush(ctx, ui, sb, state);
 										state[MD_PARAGRAPH] = 1;
 									}
 									state[MD_LAST_TAB] = state[MD_TAB];
@@ -142,8 +172,8 @@ public class Markdown {
 										state[MD_PARAGRAPH] = 0;
 									}
 								} else if (state[MD_LENGTH] == 0 && state[MD_PARAGRAPH] == 0) {
-									flush(ctx, form, sb, state);
-									form.lineBreak(ctx);
+									flush(ctx, ui, sb, state);
+									ui.lineBreak(ctx);
 									state[MD_PARAGRAPH] = 1;
 								}
 								continue;
@@ -225,7 +255,7 @@ public class Markdown {
 										continue;
 									case ' ':
 										if (state[MD_HASH] != 0) {
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
 											l = c;
 											state[MD_HEADER] = state[MD_HASH];
 											state[MD_HASH] = 0;
@@ -261,7 +291,7 @@ public class Markdown {
 												i = k - 1;
 												state[MD_LINE] ++;
 												sb.append("\n");
-												flush(ctx, form, sb, state);
+												flush(ctx, ui, sb, state);
 												continue;
 											}
 										}
@@ -279,7 +309,7 @@ public class Markdown {
 												i = k - 1;
 												state[MD_LINE] ++;
 												sb.append("\n");
-												flush(ctx, form, sb, state);
+												flush(ctx, ui, sb, state);
 												continue;
 											}
 										}
@@ -303,7 +333,7 @@ public class Markdown {
 											if (i + 2 < k && chars[i + 2] == c) {
 												s = c == '*' ? "***" : "___";
 												if (state[t] == 3) {
-													flush(ctx, form, sb, state);
+													flush(ctx, ui, sb, state);
 													state[t] = 0;
 													state[MD_BOLD] --;
 													state[MD_ITALIC] --;
@@ -317,7 +347,7 @@ public class Markdown {
 														i += 2;
 														continue;
 													}
-													flush(ctx, form, sb, state);
+													flush(ctx, ui, sb, state);
 													state[t] = 3;
 													state[MD_BOLD] ++;
 													state[MD_ITALIC] ++;
@@ -330,7 +360,7 @@ public class Markdown {
 											}
 											s = c == '*' ? "**" : "__";
 											if (state[t] == 2) {
-												flush(ctx, form, sb, state);
+												flush(ctx, ui, sb, state);
 												state[t] = 0;
 												state[MD_BOLD] --;
 												i++;
@@ -344,7 +374,7 @@ public class Markdown {
 													i++;
 													continue;
 												}
-												flush(ctx, form, sb, state);
+												flush(ctx, ui, sb, state);
 												state[t] = 2;
 												state[MD_BOLD] ++;
 												i++;
@@ -356,7 +386,7 @@ public class Markdown {
 										}
 										
 										if (state[t] == 1) {
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
 											state[t] = 0;
 											state[MD_ITALIC] = 0;
 											continue;
@@ -368,7 +398,7 @@ public class Markdown {
 													|| (c == '_' && j + 1 != k && chars[j + 1] > ' ')) {
 												break;
 											}
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
 											state[t] = 1;
 											state[MD_ITALIC] = 1;
 											state[MD_LENGTH] ++;
@@ -390,14 +420,14 @@ public class Markdown {
 												break;
 											}
 	
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
 											state[MD_STRIKE] = 1;
 											state[MD_LENGTH] ++;
 											i++;
 											continue;
 										}
 										if (state[MD_STRIKE] == 1) {
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
 											state[MD_STRIKE] = 0;
 											i++;
 											continue;
@@ -405,35 +435,43 @@ public class Markdown {
 										continue;
 									}
 									case '`': {
-										if (i + 1 >= len) {
-											break;
-										}
 										if (i + 2 < len && chars[i + 1] == c && chars[i + 2] == c) {
-											flush(ctx, form, sb, state);
+											int j = body.indexOf('\n', i + 1);
+											int k = body.indexOf('`', i + 3);
+											flush(ctx, ui, sb, state);
 											i += state[MD_GRAVE] = 3;
+
+											String lang = null;
+											if (j != -1 && j < k) {
+												lang = body.substring(i, j);
+												i = j + 1;
+											}
+
+											ui.beginCodeBlock(ctx, lang);
 										} else {
 											int j = body.indexOf('`', i + 1);
 											if (j == -1) break;
 											if (i + 1 < len && chars[i + 1] == c) {
-												flush(ctx, form, sb, state);
+												flush(ctx, ui, sb, state);
 												i += state[MD_GRAVE] = 2;
 											} else {
-												flush(ctx, form, sb, state);
+												flush(ctx, ui, sb, state);
 												i += state[MD_GRAVE] = 1;
 											}
 										}
 										if (state[MD_GRAVE] != 0) {
+											System.out.println("end " + state[MD_GRAVE] + " " + i + " " + len);
 											while (i < len) {
 												if ((c = chars[i++]) == '`') {
 													if (state[MD_GRAVE] == 1) {
 														break;
 													} else if (state[MD_GRAVE] == 2) {
-														if (i + 1 < len && chars[i] == c) {
+														if (i < len && chars[i] == c) {
 															i++;
 															break;
 														}
 													} else if (state[MD_GRAVE] == 3) {
-														if (i + 2 < len && chars[i] == c && chars[i + 1] == c) {
+														if (i + 1 < len && chars[i] == c && chars[i + 1] == c) {
 															i += 2;
 															break;
 														}
@@ -449,7 +487,10 @@ public class Markdown {
 												l = c;
 												sb.append(c);
 											}
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
+											if (state[MD_GRAVE] == 3) {
+												ui.endCodeBlock(ctx);
+											}
 											d = body.indexOf('<', o = i);
 											state[MD_LENGTH] ++;
 											state[MD_GRAVE] = 0;
@@ -482,11 +523,11 @@ public class Markdown {
 											break;
 										}
 										
-										flush(ctx, form, sb, state);
+										flush(ctx, ui, sb, state);
 										
 										Object t = new StringBuffer();
 										linksStack.push(t);
-										form.beginHref(ctx, t);
+										ui.beginHref(ctx, t);
 										
 										l = c;
 										state[MD_BRACKET] ++;
@@ -501,7 +542,7 @@ public class Markdown {
 	
 										((StringBuffer) linksStack.peek()).append(sb.toString());
 										if (state[MD_IMAGE] == 0) {
-											flush(ctx, form, sb, state);
+											flush(ctx, ui, sb, state);
 										}
 										sb.setLength(0);
 										
@@ -526,12 +567,12 @@ public class Markdown {
 	
 										StringBuffer t = (StringBuffer) linksStack.pop();
 										if (state[MD_IMAGE] != 0) {
-											form.appendImage(ctx, t, t.toString());
+											ui.appendImage(ctx, t, t.toString());
 											state[MD_IMAGE] --;
 										}
 										if (t != null) {
 											if (urls != null) urls.put(t, sb.toString());
-											form.endHref(ctx);
+											ui.endHref(ctx);
 										}
 										sb.setLength(0);
 										
@@ -581,7 +622,7 @@ public class Markdown {
 						}
 						
 						if (state[MD_HTML_LINK] == 0 && sb.length() != 0) {
-							flush(ctx, form, sb, state);
+							flush(ctx, ui, sb, state);
 						}
 						if (d == len) break;
 					}
@@ -621,9 +662,9 @@ public class Markdown {
 								// </a>
 								state[MD_HTML_LINK] --;
 								
-								flush(ctx, form, sb, state);
+								flush(ctx, ui, sb, state);
 	
-								if (linksStack.pop() != null) form.endHref(ctx);
+								if (linksStack.pop() != null) ui.endHref(ctx);
 							} else {
 								sb.append('<');
 								e = d;
@@ -659,7 +700,7 @@ public class Markdown {
 							} else if (chars[d + 1] == 'i' && chars[d + 2] == 'm' && chars[d + 3] == 'g') {
 								// <img>
 								
-								flush(ctx, form, sb, state);
+								flush(ctx, ui, sb, state);
 								
 								String url = body.substring(d + 4, e);
 								int i;
@@ -672,10 +713,10 @@ public class Markdown {
 									if (url.charAt(0) == '"')
 										url = url.substring(1, url.length() - 1);
 	
-									form.beginHref(ctx, url);
+									ui.beginHref(ctx, url);
 									if (urls != null) urls.put(url, url);
-									form.appendImage(ctx, url, null);
-									form.endHref(ctx);
+									ui.appendImage(ctx, url, null);
+									ui.endHref(ctx);
 								}
 							} else if (chars[d + 1] == 's' && chars[d + 2] == 'm') {
 								// <small>
@@ -685,7 +726,7 @@ public class Markdown {
 							} else if (chars[d + 1] == 'a'
 									&& (chars[d + 2] == ' ' || chars[d + 2] == '>')) {
 								// <a>
-								flush(ctx, form, sb, state);
+								flush(ctx, ui, sb, state);
 								state[MD_HTML_LINK] ++;
 								
 								String url = body.substring(d + 2, e);
@@ -698,7 +739,7 @@ public class Markdown {
 									
 									if (url.charAt(0) == '"')
 										url = url.substring(1, url.length() - 1);
-									form.beginHref(ctx, url);
+									ui.beginHref(ctx, url);
 									if (urls != null) urls.put(url, url);
 									linksStack.push(url);
 								} else {
@@ -716,7 +757,7 @@ public class Markdown {
 				}
 			}
 		} finally {
-			form.endMarkdown(ctx);
+			ui.endMarkdown(ctx);
 		}
 	}
 	

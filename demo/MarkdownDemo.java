@@ -50,8 +50,8 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 	boolean started;
 	Form form;
 	
-	Hashtable urls = new Hashtable(); // link->url table
-	Hashtable itemsLinks = new Hashtable(); // item->link table
+	Hashtable urls = new Hashtable(); // link=>url table
+	Hashtable itemsLinks = new Hashtable(); // item=>link table
 	Stack links = new Stack();
 	Vector loadImages = new Vector(); // image loading queue
 
@@ -147,6 +147,12 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 
 	public void endHref(Object ctx) {
 		links.pop();
+	}
+
+	public void beginCodeBlock(Object ctx, String language) {
+	}
+
+	public void endCodeBlock(Object ctx) {
 	}
 
 	public void append(Object ctx, String text, int font) {
