@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Stack;
-import java.util.Vector;
 
 import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
@@ -58,7 +57,6 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	Hashtable urls = new Hashtable(); // link=>url table
 	Hashtable itemsLinks = new Hashtable(); // item=>link table
 	Stack links = new Stack();
-	Vector loadImages = new Vector(); // image loading queue
 
 	protected void destroyApp(boolean unconditional) {
 	}
@@ -137,20 +135,6 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	}
 
 	public void endMarkdown(Object ctx) {
-		// process image loading queue
-		while (!loadImages.isEmpty()) {
-			Object[] o = (Object[]) loadImages.elementAt(0);
-			loadImages.removeElementAt(0);
-			
-			ImageItem item = (ImageItem) o[0];
-			String url = (String) urls.get(o[1]);
-			try {
-				item.setImage(Image.createImage(url));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
 		// parsing finished, remove ticker
 		form.setTicker(null);
 	}
@@ -207,24 +191,28 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		form.append(new Spacer(f.charWidth(' '), f.getBaselinePosition()));
 	}
 
-	public void appendImage(Object ctx, Object srcLink, String text) {
+	public void appendImage(Object ctx, String src, String text) {
+		Image img;
+		try {
+			img = Image.createImage(src);
+		} catch (Exception e) {
+			img = null;
+		}
+		
 		ImageItem item;
 		if (!links.empty()) {
 			// add as button
-			item = new ImageItem(text, null, 0, null, Item.BUTTON);
+			item = new ImageItem(text, img, 0, null, Item.BUTTON);
 			
 			Object link = links.peek();
 			item.setDefaultCommand(itemLinkCmd);
 			item.setItemCommandListener(this);
 			itemsLinks.put(item, link);
 		} else {
-			item = new ImageItem(text, null, 0, null);
+			item = new ImageItem(text, img, 0, null);
 		}
 		
 		form.append(item);
-		
-		// add image to loading queue
-		loadImages.addElement(new Object[] { item, srcLink });
 	}
 
 	public void lineBreak(Object ctx) {

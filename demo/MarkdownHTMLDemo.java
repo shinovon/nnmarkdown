@@ -34,7 +34,6 @@ import cc.nnproject.markdown.MarkdownListener;
 public class MarkdownHTMLDemo implements MarkdownListener {
 	
 	Stack linkMarkers = new Stack();
-	Stack imgMarkers = new Stack();
 	Hashtable urls = new Hashtable(); // link=>url table
 	
 	StringBuffer result = new StringBuffer();
@@ -55,17 +54,8 @@ public class MarkdownHTMLDemo implements MarkdownListener {
 			text = e.toString();
 		}
 		
+		Markdown.enableStrikethroughFont = true;
 		Markdown.parse(this, null, text, urls);
-		
-		// backpatch image urls
-		int l = imgMarkers.size();
-		for (int i = l - 1; i >= 0; --i) {
-			Object[] img = (Object[]) imgMarkers.elementAt(i);
-			String url = (String) urls.get(img[1]);
-			if (url == null) continue;
-			
-			result.insert(((Integer) img[0]).intValue(), " src=\"" + escapeArg(url) + "\"");
-		}
 		
 		System.out.println(result);
 	}
@@ -87,15 +77,6 @@ public class MarkdownHTMLDemo implements MarkdownListener {
 		int insert = ((Integer) link[0]).intValue();
 		String s = "<a href=\"" + escapeArg((String) urls.get(link[1])) + "\">";
 		result.insert(insert, s);
-
-		// fix offset
-		int l = imgMarkers.size();
-		for (int i = 0; i < l; ++i) {
-			Object[] img = (Object[]) imgMarkers.elementAt(i);
-			int j = ((Integer) img[0]).intValue();
-			if (j < insert) continue;
-			img[0] = new Integer(j + s.length());
-		}
 	}
 
 	public void beginCodeBlock(Object ctx, String language) {
@@ -175,10 +156,12 @@ public class MarkdownHTMLDemo implements MarkdownListener {
 		result.append("&nbsp;");
 	}
 
-	public void appendImage(Object ctx, Object srcLink, String alt) {
-		result.append("<img alt=\""+escapeArg(alt)+"\"");
-		imgMarkers.addElement(new Object[] { new Integer(result.length()), srcLink });
-		result.append(">");
+	public void appendImage(Object ctx, String src, String alt) {
+		result.append("<img alt=\"")
+		.append(escapeArg(alt))
+		.append("\" src=\"")
+		.append(src)
+		.append("\">");
 	}
 
 	public void lineBreak(Object ctx) {

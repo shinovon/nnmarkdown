@@ -113,7 +113,7 @@ public class Markdown {
 	 * Enables blockquotes
 	 */
 	public static boolean enableBlockquotes = true;
-	public static boolean breakOnNewLine = true;
+	public static boolean breakOnNewLine = true; // TODO set default value to false when lists are implemented
 	
 	public static void parse(MarkdownListener ui, Object ctx, String body, Hashtable urls) {
 		if (body == null) {
@@ -215,12 +215,11 @@ public class Markdown {
 								if (c == '&' && i + 1 != len) { // entity
 									switch (chars[i + 1]) {
 									case 'n': // nbsp;
-										if (i + 5 >= len) {
-											break;
-										}
-										if (chars[i += 5] == ';') {
+										if (i + 5 < len && chars[i + 2] == 'b' && chars[i + 3] == 's'
+												&& chars[i + 5] == 'p' && chars[i + 5] == ';') {
 											c = ' ';
-										} else i -= 5;
+											i += 5;
+										}
 										break;
 									case 'l': // lt
 										if (i + 3 < len && chars[i + 2] == 't' && chars[i + 3] == ';') {
@@ -556,7 +555,7 @@ public class Markdown {
 										
 										Object t = new StringBuffer();
 										linksStack.push(t);
-										ui.beginHref(ctx, t);
+										if (state[MD_IMAGE] == 0) ui.beginHref(ctx, t);
 										
 										l = c;
 										state[MD_BRACKET] ++;
@@ -596,10 +595,9 @@ public class Markdown {
 	
 										StringBuffer t = (StringBuffer) linksStack.pop();
 										if (state[MD_IMAGE] != 0) {
-											ui.appendImage(ctx, t, t.toString());
+											ui.appendImage(ctx, sb.toString(), t.toString());
 											state[MD_IMAGE] --;
-										}
-										if (t != null) {
+										} else if (t != null) {
 											if (urls != null) urls.put(t, sb.toString());
 											ui.endHref(ctx);
 										}
@@ -751,7 +749,6 @@ public class Markdown {
 										url = url.substring(1, url.length() - 1);
 	
 									ui.beginHref(ctx, url);
-									if (urls != null) urls.put(url, url);
 									ui.appendImage(ctx, url, null);
 									ui.endHref(ctx);
 								}

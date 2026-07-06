@@ -83,10 +83,10 @@ public interface MarkdownListener {
 	
 	/**
 	 * @param ctx Context passed by application
-	 * @param srcLink Link to the source of image
+	 * @param src Image URL
 	 * @param alt Image caption, may be null
 	 */
-	void appendImage(Object ctx, Object srcLink, String alt);
+	void appendImage(Object ctx, String src, String alt);
 
 	/**
 	 * @param ctx Context passed by application
