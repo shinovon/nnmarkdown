@@ -223,22 +223,22 @@ public class Markdown {
 										} else i -= 5;
 										break;
 									case 'l': // lt
-										if (i + 3 >= len) break;
-										if (chars[i += 3] == ';') {
+										if (i + 3 < len && chars[i + 2] == 't' && chars[i + 3] == ';') {
 											c = '<';
-										} else i -= 3;
+											i += 3;
+										}
 										break;
 									case 'g': // gt
-										if (i + 3 >= len) break;
-										if (chars[i += 3] == ';') {
+										if (i + 3 < len && chars[i + 2] == 't' && chars[i + 3] == ';') {
 											c = '>';
-										} else i -= 3;
+											i += 3;
+										}
 										break;
 									case 'a': // amp
-										if (i + 4 >= len) break;
-										if (chars[i += 4] == ';') {
+										if (i + 4 < len && chars[i + 2] == 'm' && chars[i + 3] == 'p' && chars[i + 4] == ';') {
 											c = '&';
-										} else i -= 4;
+											i += 4;
+										}
 										break;
 									case '#':
 										int k = i + 2;
