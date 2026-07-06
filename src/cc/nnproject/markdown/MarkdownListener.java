@@ -96,7 +96,7 @@ public interface MarkdownListener {
 	/**
 	 * @param ctx Context passed by application
 	 */
-	void lineBreak2(Object ctx);
+	void header(Object ctx);
 
 	/**
 	 * @param ctx Context passed by application

@@ -124,7 +124,11 @@ public class Markdown {
 		StringBuffer sb = new StringBuffer();
 		int d = body.indexOf('<');
 		int len = body.length();
-		if (len == 0) return;
+		if (len == 0) {
+			ui.beginMarkdown(ctx);
+			ui.endMarkdown(ctx);
+			return;
+		}
 		int o = 0;
 		int[] state = new int[MD_COUNT];
 		state[MD_FONT_SIZE] = FONT_SIZE_SMALL;
@@ -606,6 +610,14 @@ public class Markdown {
 										state[MD_LINK] --;
 										continue;
 									}
+									// TODO
+//									case '1': {
+//										if (state[MD_LENGTH] == 0 && i + 1 != len && chars[i + 1] == '.') {
+//											
+//											continue;
+//										}
+//										break;
+//									}
 									default:
 										if (c < ' ' && state[MD_LENGTH] == 0) {
 											l = c;
@@ -803,7 +815,7 @@ public class Markdown {
 		if (sb.length() == 0) return;
 
 		if (state[MD_HEADER] != 0) {
-			form.lineBreak2(ctx);
+			form.header(ctx);
 		}
 		int space = 0;
 		while (sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ') {

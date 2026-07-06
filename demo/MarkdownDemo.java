@@ -228,7 +228,7 @@ public class MarkdownDemo extends MIDlet implements MarkdownListener, CommandLis
 		form.append("\n");
 	}
 
-	public void lineBreak2(Object ctx) {
+	public void header(Object ctx) {
 		Spacer spacer = new Spacer(1, 4);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
 		form.append(spacer);
