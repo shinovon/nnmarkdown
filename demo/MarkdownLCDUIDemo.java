@@ -43,6 +43,10 @@ import javax.microedition.midlet.MIDlet;
 import cc.nnproject.markdown.Markdown;
 import cc.nnproject.markdown.MarkdownListener;
 
+/**
+ * LCDUI application demo for nnmarkdown library
+ * @author Shinovon
+ */
 public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, CommandListener, ItemCommandListener, Runnable {
 	
 	static final Command exitCmd = new Command("Exit", Command.EXIT, 0);
