@@ -52,7 +52,6 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	static final Command itemLinkCmd = new Command("Link", Command.ITEM, 1);
 	
 	boolean started;
-	Form form;
 	
 	Hashtable urls = new Hashtable(); // link=>url table
 	Hashtable itemsLinks = new Hashtable(); // item=>link table
@@ -68,17 +67,17 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		if (started) return;
 		started = true;
 		
-		Form form = new Form("Markdown demo");
-		form.addCommand(exitCmd);
-		form.setCommandListener(this);
-		
-		Display.getDisplay(this).setCurrent(this.form = form);
-		
 		// start parsing thread
 		new Thread(this).start();
 	}
 	
 	public void run() {
+		Form form = new Form("Markdown demo");
+		form.addCommand(exitCmd);
+		form.setCommandListener(this);
+		
+		Display.getDisplay(this).setCurrent(form);
+		
 		// cleanup
 		urls.clear();
 		itemsLinks.clear();
@@ -87,7 +86,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		// load source text
 		String text;
 		try {
-			text = readUtf("".getClass().getResourceAsStream("/a"), 0);
+			text = readUtf("".getClass().getResourceAsStream("/a.md"), 0);
 		} catch (Exception e) {
 			text = e.toString();
 		}
@@ -135,12 +134,12 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	// region Markdown listener
 
 	public void beginMarkdown(Object ctx) {
-		form.setTicker(new Ticker("Loading..."));
+		((Form) ctx).setTicker(new Ticker("Loading..."));
 	}
 
 	public void endMarkdown(Object ctx) {
 		// parsing finished, remove ticker
-		form.setTicker(null);
+		((Form) ctx).setTicker(null);
 	}
 
 	public void beginHref(Object ctx, Object link) {
@@ -166,7 +165,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	public void append(Object ctx, String text, int font) {
 		StringItem item = new StringItem(null, text);
 		item.setFont(getFont(font));
-		form.append(item);
+		((Form) ctx).append(item);
 		
 		if (!links.empty()) {
 			Object link = links.peek();
@@ -181,7 +180,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		item.setFont(getFont(font));
 		item.setDefaultCommand(itemLinkCmd);
 		item.setItemCommandListener(this);
-		form.append(item);
+		((Form) ctx).append(item);
 		
 		Object link = text;
 		if (!links.empty()) {
@@ -192,7 +191,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 
 	public void appendInlineSpace(Object ctx, int font) {
 		Font f = getFont(font);
-		form.append(new Spacer(f.charWidth(' '), f.getBaselinePosition()));
+		((Form) ctx).append(new Spacer(f.charWidth(' '), f.getBaselinePosition()));
 	}
 
 	public void appendImage(Object ctx, String src, String text) {
@@ -216,31 +215,31 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 			item = new ImageItem(text, img, 0, null);
 		}
 		
-		form.append(item);
+		((Form) ctx).append(item);
 	}
 
 	public void lineBreak(Object ctx) {
-		form.append("\n");
+		((Form) ctx).append("\n");
 	}
 
 	public void beginHeader(Object ctx, int n) {
 		Spacer spacer = new Spacer(1, 4);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
-		form.append(spacer);
+		((Form) ctx).append(spacer);
 	}
 
 	public void endHeader(Object ctx, int n) {
 		if (n > 3) return;
 		Spacer spacer = new Spacer(10, 10);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
-		form.append(spacer);
+		((Form) ctx).append(spacer);
 	}
 
 	public void horizontalLine(Object ctx) {
 		// can't render lines on lcdui form, add spacer instead
 		Spacer spacer = new Spacer(10, 10);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
-		form.append(spacer);
+		((Form) ctx).append(spacer);
 	}
 	
 	// endregion Markdown listener
@@ -267,6 +266,6 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		return new String(buf, 0, i, "UTF-8");
 	}
 	
-	// endregion
+	// endregion Utilities
 
 }

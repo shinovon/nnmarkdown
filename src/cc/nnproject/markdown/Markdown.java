@@ -227,7 +227,7 @@ public class Markdown {
 									switch (chars[i + 1]) {
 									case 'n': // nbsp;
 										if (i + 5 < len && chars[i + 2] == 'b' && chars[i + 3] == 's'
-												&& chars[i + 5] == 'p' && chars[i + 5] == ';') {
+												&& chars[i + 4] == 'p' && chars[i + 5] == ';') {
 											c = ' ';
 											i += 5;
 										}
@@ -819,11 +819,11 @@ public class Markdown {
 		}
 	}
 	
-	private static void flush(Object ctx, MarkdownListener form, StringBuffer sb, int[] state) {
+	private static void flush(Object ctx, MarkdownListener ui, StringBuffer sb, int[] state) {
 		if (sb.length() == 0) return;
 
 		if (state[MD_HEADER] != 0) {
-			form.beginHeader(ctx, state[MD_HEADER]);
+			ui.beginHeader(ctx, state[MD_HEADER]);
 		}
 		int space = 0;
 		while (sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ') {
@@ -873,9 +873,9 @@ public class Markdown {
 						if (!valid) break b;
 						
 						if (i != 0) {
-							form.append(ctx, t.substring(0, j), f);
+							ui.append(ctx, t.substring(0, j), f);
 						}
-						form.appendLink(ctx, t.substring(j, k), f);
+						ui.appendLink(ctx, t.substring(j, k), f);
 						
 						t = t.substring(k);
 						d = 0;
@@ -897,9 +897,9 @@ public class Markdown {
 						}
 						if (k == i + 10 || k == i + 1) break b;
 						if (i != 0) {
-							form.append(ctx, t.substring(0, i), f);
+							ui.append(ctx, t.substring(0, i), f);
 						}
-						form.appendLink(ctx, t.substring(i, k), f);
+						ui.appendLink(ctx, t.substring(i, k), f);
 						
 						t = t.substring(k);
 						d = 0;
@@ -911,18 +911,18 @@ public class Markdown {
 		}
 		
 		if (t.length() != 0) {
-			form.append(ctx, t, f);
+			ui.append(ctx, t, f);
 		}
 		sb.setLength(0);
 		
 		if (state[MD_HEADER] != 0) {
-			form.endHeader(ctx, state[MD_HEADER]);
+			ui.endHeader(ctx, state[MD_HEADER]);
 		} else if ( state[MD_LINE] != 0) {
-			form.horizontalLine(ctx);
+			ui.horizontalLine(ctx);
 			state[MD_LINE] = 0;
 			state[MD_PARAGRAPH] = 1;
 		} else while (space-- != 0) {
-			form.appendInlineSpace(ctx, f);
+			ui.appendInlineSpace(ctx, f);
 		}
 	}
 

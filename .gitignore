@@ -17,3 +17,6 @@
 build.properties
 .classpath
 .project
+.idea
+*.cfg
+*.iml

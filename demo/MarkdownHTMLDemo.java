@@ -49,7 +49,7 @@ public class MarkdownHTMLDemo implements MarkdownListener {
 		
 		String text;
 		try {
-			text = readUtf("".getClass().getResourceAsStream("/a"), 0);
+			text = readUtf("".getClass().getResourceAsStream("/a.md"), 0);
 		} catch (Exception e) {
 			text = e.toString();
 		}
