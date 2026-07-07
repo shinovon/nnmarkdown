@@ -70,6 +70,12 @@ public interface MarkdownListener {
 	 */
 	void endHeader(Object ctx, int n);
 
+	void beginList(Object ctx, boolean ordered);
+	void endList(Object ctx, boolean ordered);
+
+	void beginListItem(Object ctx, int n);
+	void endListItem(Object ctx);
+
 	/**
 	 * @param ctx Context passed by application
 	 * @param text Text

@@ -177,6 +177,22 @@ public class MarkdownHTMLDemo implements MarkdownListener {
 		if (n <= 3) result.append("<hr>");
 	}
 
+	public void beginList(Object ctx, boolean ordered) {
+		result.append(ordered ? "<ol>" : "<ul>");
+	}
+
+	public void endList(Object ctx, boolean ordered) {
+		result.append(ordered ? "</ol>" : "</ul>");
+	}
+
+	public void beginListItem(Object ctx, int n) {
+		result.append("<li>");
+	}
+
+	public void endListItem(Object ctx) {
+		result.append("</li>");
+	}
+
 	public void horizontalLine(Object ctx) {
 		result.append("<hr>");
 	}

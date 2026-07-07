@@ -114,10 +114,14 @@ public class Markdown {
 	 */
 	public static boolean enableBlockquotes = true;
 	/**
+	 * Enables parsing of lists
+	 */
+	public static boolean enableLists = true;
+	/**
 	 * Make monospace text have bold style
 	 */
 	public static boolean monospaceIsBold = false;
-	public static boolean breakOnNewLine = true; // TODO set default value to false when lists are implemented
+	public static boolean breakOnNewLine = false;
 	
 	/**
 	 * 
@@ -144,6 +148,7 @@ public class Markdown {
 		int[] state = new int[MD_COUNT];
 		state[MD_FONT_SIZE] = FONT_SIZE_SMALL;
 		Stack linksStack = new Stack();
+		Stack listsStack = new Stack();
 		
 		ui.beginMarkdown(ctx);
 		try {
@@ -201,6 +206,11 @@ public class Markdown {
 										ui.endBlockQuote(ctx);
 										state[MD_BLOCKQUOTE] --;
 										j --;
+									}
+
+									while (!listsStack.isEmpty()) {
+										ui.endListItem(ctx);
+										ui.endList(ctx, ((int[]) listsStack.pop())[0] == 0);
 									}
 									
 									ui.lineBreak(ctx);
@@ -276,11 +286,61 @@ public class Markdown {
 											sb.append("  ");
 										}
 									}
-									if (state[MD_GT] != 0 && state[MD_LENGTH] == 0 && c != '>' && state[MD_GT] > state[MD_BLOCKQUOTE]) {
-										flush(ctx, ui, sb, state);
-										state[MD_BLOCKQUOTE] ++;
-										ui.lineBreak(ctx);
-										ui.beginBlockQuote(ctx);
+									if (state[MD_LENGTH] == 0) {
+										if (state[MD_GT] != 0 && c != '>') {
+											flush(ctx, ui, sb, state);
+											if (!enableBlockquotes) {
+												ui.lineBreak(ctx);
+												for (int j = 0; j < state[MD_GT]; ++j) sb.append('>');
+											} else if (state[MD_GT] > state[MD_BLOCKQUOTE]) {
+												ui.lineBreak(ctx);
+												state[MD_BLOCKQUOTE]++;
+												ui.beginBlockQuote(ctx);
+											}
+										}
+
+										if ((c == '*' || c == '+' || c == '-') && i + 1 < len && chars[i + 1] == ' ') {
+											// list item
+											// TODO ordered
+											i++;
+											int tab = state[MD_TAB];
+
+											while (!listsStack.empty()) {
+												int[] t = (int[]) listsStack.peek();
+												if (tab > t[1]) break;
+
+												flush(ctx, ui, sb, state);
+												ui.endListItem(ctx);
+												ui.lineBreak(ctx);
+												if ((tab == t[1] && c != t[0]) || t[1] > tab) {
+													ui.endList(ctx, t[0] == 0);
+													listsStack.pop();
+													continue;
+												}
+												break;
+											}
+
+											int[] t;
+											if (listsStack.empty() || tab > (t = (int[]) listsStack.peek())[1]) {
+												flush(ctx, ui, sb, state);
+												listsStack.push(t = new int[] { c, tab, 0 });
+												ui.lineBreak(ctx);
+												ui.beginList(ctx, false);
+											}
+
+											if (!enableLists) {
+												for (int j = 0; j < tab; ++j) sb.append("  ");
+												if (t[0] == 0) {
+													sb.append(++t[2]).append(". ");
+												} else {
+													sb.append("* ");
+												}
+											}
+											ui.beginListItem(ctx, t[0] == 0 ? t[2] : 0);
+
+											state[MD_LENGTH]++;
+											continue;
+										}
 									}
 	
 									switch (c) {
@@ -306,11 +366,7 @@ public class Markdown {
 										break;
 									case '>':
 										if (state[MD_LENGTH] == 0) {
-											if (!enableBlockquotes) {
-												sb.append(c);
-											} else {
-												state[MD_GT] ++;
-											}
+											state[MD_GT] ++;
 											l = c;
 											continue;
 										}

@@ -93,8 +93,8 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		
 		// parsing options
 		Markdown.enableBlockquotes = false;
+		Markdown.enableLists = false;
 		Markdown.monospaceIsBold = true;
-		Markdown.breakOnNewLine = true;
 		
 		Markdown.parse(this, form, text, urls);
 	}
@@ -233,6 +233,22 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		Spacer spacer = new Spacer(10, 10);
 		spacer.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
 		((Form) ctx).append(spacer);
+	}
+
+	public void beginList(Object ctx, boolean ordered) {
+
+	}
+
+	public void endList(Object ctx, boolean ordered) {
+
+	}
+
+	public void beginListItem(Object ctx, int n) {
+
+	}
+
+	public void endListItem(Object ctx) {
+
 	}
 
 	public void horizontalLine(Object ctx) {
