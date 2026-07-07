@@ -56,6 +56,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	Hashtable urls = new Hashtable(); // link=>url table
 	Hashtable itemsLinks = new Hashtable(); // item=>link table
 	Stack links = new Stack();
+	int listIndent;
 
 	protected void destroyApp(boolean unconditional) {
 	}
@@ -82,6 +83,7 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		urls.clear();
 		itemsLinks.clear();
 		links.removeAllElements();
+		listIndent = 0;
 		
 		// load source text
 		String text;
@@ -93,7 +95,6 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 		
 		// parsing options
 		Markdown.enableBlockquotes = false;
-		Markdown.enableLists = false;
 		Markdown.monospaceIsBold = true;
 		
 		Markdown.parse(this, form, text, urls);
@@ -236,15 +237,26 @@ public class MarkdownLCDUIDemo extends MIDlet implements MarkdownListener, Comma
 	}
 
 	public void beginList(Object ctx, boolean ordered) {
-
+		listIndent++;
 	}
 
 	public void endList(Object ctx, boolean ordered) {
-
+		listIndent--;
 	}
 
 	public void beginListItem(Object ctx, int n) {
+		StringBuffer sb = new StringBuffer();
 
+		for (int i = 1; i < listIndent; i++) {
+			sb.append("  ");
+		}
+		if (n == 0) {
+			sb.append("* ");
+		} else {
+			sb.append(n).append(". ");
+		}
+
+		((Form) ctx).append(sb.toString());
 	}
 
 	public void endListItem(Object ctx) {
