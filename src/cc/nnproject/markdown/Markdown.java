@@ -27,7 +27,7 @@ import java.util.Stack;
 /**
  * Markdown parser library
  * @author Shinovon
- * @version 0.2
+ * @version 0.6
  */
 public class Markdown {
 	public static final int FONT_SIZE_SMALL = 1 << 3;
