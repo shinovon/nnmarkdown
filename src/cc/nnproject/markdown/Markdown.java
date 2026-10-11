@@ -102,11 +102,11 @@ public class Markdown {
 	 */
 	public static boolean enableLinksSearching = true;
 	/**
-	 * Enables highlighting of words starting with @
+	 * Enables highlighting of words starting with #
 	 */
 	public static boolean enableHashtagLinks = false;
 	/**
-	 * Enables highlighting of words starting with #
+	 * Enables highlighting of words starting with @
 	 */
 	public static boolean enableTagLinks = false;
 	/**
@@ -123,7 +123,7 @@ public class Markdown {
 	public static boolean monospaceIsBold = false;
 	public static boolean breakOnNewLine = false;
 	/**
-	 * Treat __a__ syntax as underline, Discord compatibility
+	 * Treat __text__ syntax as underline, Discord compatibility
 	 */
 	public static boolean doubleUnderscoreIsUnderline = false;
 	
