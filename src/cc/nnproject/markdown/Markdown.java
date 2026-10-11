@@ -122,6 +122,10 @@ public class Markdown {
 	 */
 	public static boolean monospaceIsBold = false;
 	public static boolean breakOnNewLine = false;
+	/**
+	 * Treat __a__ syntax as underline, Discord compatibility
+	 */
+	public static boolean doubleUnderscoreIsUnderline = false;
 	
 	/**
 	 * 
@@ -458,7 +462,11 @@ public class Markdown {
 											if (state[t] == 2) {
 												flush(ctx, ui, sb, state);
 												state[t] = 0;
-												state[MD_BOLD] --;
+												if (doubleUnderscoreIsUnderline) {
+													state[MD_HTML_UNDERLINE] --;
+												} else {
+													state[MD_BOLD] --;
+												}
 												i++;
 												continue;
 											} else if (state[t] == 0) {
@@ -472,7 +480,11 @@ public class Markdown {
 												}
 												flush(ctx, ui, sb, state);
 												state[t] = 2;
-												state[MD_BOLD] ++;
+												if (doubleUnderscoreIsUnderline) {
+													state[MD_HTML_UNDERLINE] ++;
+												} else {
+													state[MD_BOLD] ++;
+												}
 												i++;
 												continue;
 											}
@@ -750,7 +762,6 @@ public class Markdown {
 									|| (chars[d + 2] == 'u' && chars[d + 3] == '>')) {
 								// </sub>, </ins>, </u>
 								state[MD_HTML_UNDERLINE] --;
-								state[1] &= ~FONT_STYLE_UNDERLINED;
 							} else if (chars[d + 2] == 'p' && chars[d + 3] == '>') {
 								// </p>
 								state[MD_HTML_PARAGRAPH] --;
@@ -791,7 +802,6 @@ public class Markdown {
 									|| (chars[d + 1] == 'u')) {
 								// <sub>, <ins>, <u>
 								state[MD_HTML_UNDERLINE] ++;
-								state[1] |= FONT_STYLE_UNDERLINED;
 							} else if (chars[d + 1] == 'b' && chars[d + 2] == 'r') {
 								// <br>
 								sb.append('\n');
@@ -1003,6 +1013,9 @@ public class Markdown {
 		}
 		if (enableStrikethroughFont && (state[MD_STRIKE] != 0 || state[MD_HTML_STRIKE] != 0)) {
 			style |= FONT_STYLE_STRIKETHROUGH;
+		}
+		if (state[MD_HTML_UNDERLINE] != 0) {
+			style |= FONT_STYLE_UNDERLINED;
 		}
 		int header = state[MD_HEADER];
 		switch (header != 0 ? header : state[MD_HTML_HEADER]) {
